@@ -1,0 +1,91 @@
+# Flag unresolved TODO comments before merging to production
+#
+# Use Case:
+# TODO comments are useful during development but indicate incomplete work.
+# This rule helps ensure that:
+# - All planned work is tracked in your issue tracker
+# - Code merged to main branches is production-ready
+# - Technical debt is properly documented
+# - No unfinished features slip through code review
+#
+# Example violations:
+# // TODO: Fix this edge case
+# // TODO: Add error handling
+# # TODO: Optimize this query
+# /* TODO: Refactor this method */
+#
+# Example fixes:
+# 1. Complete the TODO and remove the comment
+# 2. Create a ticket (e.g., JIRA-123) and reference it:
+#    // TECH-DEBT: Optimize query performance (see TICKET-456)
+# 3. If it's not important, remove the comment
+#
+# Configuration note:
+# Adjust severity based on your workflow:
+# - "error" for strict no-TODO policy
+# - "warning" to flag but allow merge with approval
+# - "info" to just track TODOs
+
+name: "No Unresolved TODO Comments"
+type: "banned-terms"
+severity: "warning"
+
+paths:
+  include:
+    - "**/*.js"
+    - "**/*.jsx"
+    - "**/*.ts"
+    - "**/*.tsx"
+    - "**/*.py"
+    - "**/*.java"
+    - "**/*.go"
+    - "**/*.rb"
+    - "**/*.php"
+    - "**/*.cs"
+    - "**/*.swift"
+    - "**/*.kt"
+    - "**/*.rs"
+    - "**/*.cpp"
+    - "**/*.c"
+    - "**/*.h"
+    - "**/*.sh"
+    - "**/*.sql"
+    - "**/*.vue"
+    - "**/*.svelte"
+  
+  exclude:
+    # Documentation and examples are OK to have TODOs
+    - "**/docs/**"
+    - "**/examples/**"
+    - "README.md"
+    - "CONTRIBUTING.md"
+    - "CHANGELOG.md"
+    
+    # Build and config files
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/vendor/**"
+
+terms:
+  - "TODO:"
+  - "TODO "
+  - "//TODO"
+  - "# TODO"
+  - "/* TODO"
+  - "@TODO"
+  - "FIXME:"
+  - "FIXME "
+  - "XXX:"
+  - "HACK:"
+
+message: |
+  Unresolved TODO comment found.
+  
+  Before merging:
+  1. Complete the TODO, or
+  2. Create a ticket and reference it instead, or
+  3. Remove the comment if it's not needed
+  
+  Consider using a format like:
+  // TECH-DEBT: [Brief description] (See TICKET-123)

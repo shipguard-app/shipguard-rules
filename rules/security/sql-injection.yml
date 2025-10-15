@@ -1,0 +1,195 @@
+# Detect potential SQL injection vulnerabilities
+#
+# Use Case:
+# SQL injection is one of the most dangerous web application vulnerabilities (OWASP Top 10).
+# Attackers can:
+# - Extract sensitive data from databases
+# - Modify or delete data
+# - Execute administrative operations
+# - Compromise the entire database server
+#
+# Example violations:
+# 
+# Python:
+# query = f"SELECT * FROM users WHERE id = {user_id}"
+# cursor.execute("SELECT * FROM users WHERE name = '" + name + "'")
+#
+# JavaScript:
+# const query = `SELECT * FROM users WHERE email = '${email}'`;
+# db.query("DELETE FROM posts WHERE id = " + postId);
+#
+# PHP:
+# $query = "SELECT * FROM users WHERE username = '$username'";
+#
+# Example fixes:
+#
+# Python (parameterized queries):
+# query = "SELECT * FROM users WHERE id = ?"
+# cursor.execute(query, (user_id,))
+#
+# JavaScript (prepared statements):
+# const query = 'SELECT * FROM users WHERE email = ?';
+# db.query(query, [email]);
+#
+# PHP (PDO prepared statements):
+# $stmt = $pdo->prepare("SELECT * FROM users WHERE username = :username");
+# $stmt->execute(['username' => $username]);
+
+name: "SQL Injection Prevention"
+type: "ai-review"
+severity: "error"
+
+paths:
+  include:
+    # Backend source files
+    - "**/*.py"
+    - "**/*.js"
+    - "**/*.ts"
+    - "**/*.php"
+    - "**/*.java"
+    - "**/*.go"
+    - "**/*.rb"
+    - "**/*.cs"
+    - "**/*.scala"
+    - "**/*.kt"
+  
+  exclude:
+    # Test files (may have intentional examples)
+    - "**/*.test.*"
+    - "**/*.spec.*"
+    - "**/__tests__/**"
+    
+    # Frontend files (less likely to have SQL)
+    - "**/components/**"
+    - "**/views/**"
+    - "**/pages/**"
+    
+    # Build artifacts
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/vendor/**"
+
+prompt: |
+  You are a senior security engineer specializing in preventing SQL injection attacks. Carefully analyze this code for SQL injection vulnerabilities.
+  
+  ## HIGH-RISK PATTERNS TO DETECT
+  
+  ### 1. String Concatenation in SQL Queries
+  Look for SQL queries built using:
+  - String concatenation operators: `+`, `||`, `concat()`
+  - String interpolation: f-strings, template literals, string formatting
+  - Variable substitution directly in query strings
+  
+  Examples to flag:
+  # Python
+  query = f"SELECT * FROM users WHERE id = {user_id}"
+  query = "SELECT * FROM users WHERE name = '" + name + "'"
+  query = "SELECT * FROM users WHERE email = %s" % email
+
+  // JavaScript/TypeScript
+  const query = `SELECT * FROM users WHERE id = ${userId}`;
+  const query = "DELETE FROM posts WHERE id = " + postId;
+
+  // PHP
+  $query = "SELECT * FROM users WHERE username = '$username'";
+  $query = "SELECT * FROM users WHERE id = " . $id;
+
+  // Java
+  String query = "SELECT * FROM users WHERE id = " + userId;
+
+  
+  ### 2. Dynamic Query Construction
+  - Building WHERE clauses dynamically with user input
+  - Dynamic ORDER BY, LIMIT, or table names
+  - Queries constructed in loops with user data
+  
+  ### 3. Raw SQL Execution
+  - Using `.execute()`, `.query()`, `.raw()` with interpolated strings
+  - Bypassing ORM safety with raw SQL and user input
+  - Dynamic SQL in stored procedure calls
+  
+  ### 4. Insufficient Input Validation
+  - Queries using user input without validation
+  - Trusting client-side validation only
+  - No type checking or sanitization before queries
+  
+  ## SAFE PATTERNS (Do not flag these)
+  
+  ### ✅ Parameterized Queries / Prepared Statements
+
+  cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+  cursor.execute("SELECT * FROM users WHERE name = :name", {"name": name})
+
+  // JavaScript (safe)
+  db.query('SELECT * FROM users WHERE id = ?', [userId]);
+  await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+
+  // PHP PDO (safe)
+  $stmt = $pdo->prepare("SELECT * FROM users WHERE id = :id");
+  $stmt->execute(['id' => $id]);
+
+  ### ✅ ORM Query Builders
+
+  // Sequelize, TypeORM, Prisma
+  await User.findOne({ where: { id: userId } });
+  await prisma.user.findUnique({ where: { id: userId } });
+
+
+  # Django ORM, SQLAlchemy
+  User.objects.filter(id=user_id)
+  session.query(User).filter(User.id == user_id)
+
+  
+  ### ✅ Static Queries (No User Input)
+
+  -- Pure SQL with no variables
+  SELECT * FROM users WHERE role = 'admin';
+
+  ## RESPONSE FORMAT
+  
+  If you find SQL injection vulnerabilities:
+
+  🚨 CRITICAL: SQL Injection Vulnerability Detected
+  
+  Location: [file]::[line number]
+  
+  Vulnerable Code:
+  [Quote the exact problematic line]
+  
+  Risk: CRITICAL - This allows attackers to:
+  - Extract all database data
+  - Modify or delete records
+  - Bypass authentication
+  - Potentially execute system commands
+  
+  Attack Example:
+  If userId = "1 OR 1=1", the query becomes:
+  SELECT * FROM users WHERE id = 1 OR 1=1
+  This returns ALL users instead of one specific user.
+  
+  SECURE FIX:
+  [Provide language-specific corrected code using parameterized queries]
+  
+  Additional Recommendations:
+  - Never trust user input
+  - Always use parameterized queries or ORM query builders
+  - Implement input validation as defense-in-depth
+  - Use least-privilege database accounts
+  
+  If the code is secure:
+
+  ✅ No SQL injection vulnerabilities detected. The code properly uses:
+  - Parameterized queries / prepared statements
+  - ORM query builders with proper escaping
+  - No direct string interpolation in SQL queries
+
+  
+  ## CRITICAL GUIDELINES
+  
+  - Even if there's input validation, flag string concatenation in SQL as vulnerable
+  - Check for injection in ORDER BY, LIMIT, table names, column names
+  - Look for raw SQL usage in ORM systems (e.g., `.raw()`, `.exec()`)
+  - Consider second-order SQL injection (data from DB used in new queries)
+  - Check stored procedures that use dynamic SQL
+  - Be aware of NoSQL injection patterns in MongoDB, etc.

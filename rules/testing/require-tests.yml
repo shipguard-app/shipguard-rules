@@ -1,0 +1,161 @@
+# Require test coverage for new features and bug fixes
+#
+# Use Case:
+# Ensuring code changes include tests prevents:
+# - Regressions when refactoring
+# - Bugs in production
+# - Poorly understood code behavior
+# - Fear of changing existing code
+# - Technical debt accumulation
+#
+# This rule uses AI to intelligently determine if tests are needed and present.
+#
+# When tests are required:
+# - New functions or methods are added
+# - Existing business logic is modified
+# - Bug fixes are implemented
+# - New API endpoints are created
+# - Complex algorithms are introduced
+#
+# When tests might not be required:
+# - Configuration changes only
+# - Documentation updates
+# - Dependency version bumps
+# - Minor refactoring without logic changes
+# - Style/formatting changes
+
+name: "Require Tests for New Features"
+type: "ai-review"
+severity: "error"
+
+paths:
+  include:
+    # Source files that should have tests
+    - "src/**/*.{js,jsx,ts,tsx}"
+    - "lib/**/*.{js,ts}"
+    - "app/**/*.{py,rb,go,java}"
+    - "pkg/**/*.go"
+    - "internal/**/*.go"
+  
+  exclude:
+    # Test files themselves
+    - "**/*.test.{js,jsx,ts,tsx}"
+    - "**/*.spec.{js,ts}"
+    - "**/__tests__/**"
+    - "**/__mocks__/**"
+    - "**/test_*.py"
+    - "**/*_test.go"
+    - "**/*Test.java"
+    
+    # Configuration and build files
+    - "**/*.config.{js,ts}"
+    - "**/webpack.*"
+    - "**/vite.*"
+    - "**/rollup.*"
+    - "**/babel.*"
+    
+    # Type definitions (don't need tests)
+    - "**/*.d.ts"
+    - "**/types/**"
+    
+    # Generated files
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/*.generated.*"
+
+prompt: |
+  You are a senior software engineer reviewing code changes for test coverage. Your goal is to ensure that meaningful code changes include appropriate tests.
+  
+  ## ANALYSIS STEPS
+  
+  ### Step 1: Understand What Changed
+  Analyze the code changes to determine:
+  - Are new functions/methods/classes being added?
+  - Is existing business logic being modified?
+  - Is this a bug fix? (Bug fixes MUST include regression tests)
+  - Are new features or capabilities being introduced?
+  - Is this just refactoring without behavior changes?
+  - Is this only configuration, docs, or styling?
+  
+  ### Step 2: Check for Corresponding Tests
+  Look through ALL the files in this PR for:
+  - New test files that cover the changed code
+  - Updates to existing test files
+  - Test cases that exercise the new/modified functionality
+  - Edge cases and error scenarios being tested
+  
+  Common test file patterns:
+  - `[filename].test.{js,ts,jsx,tsx}`
+  - `[filename].spec.{js,ts}`
+  - `__tests__/[filename].{js,ts}`
+  - `test_[filename].py`
+  - `[filename]_test.go`
+  - `[Filename]Test.java`
+  
+  ### Step 3: Assess Test Quality
+  If tests are present, verify they:
+  - Actually test the new/modified code (not just mock everything)
+  - Cover happy paths AND error cases
+  - Test edge conditions
+  - Are clear and maintainable
+  - Would catch bugs if the implementation breaks
+  
+  ## WHEN TO REQUIRE TESTS
+  
+  ### ✅ Tests ARE Required For:
+  
+  1. **New Business Logic**
+     - New functions, methods, or classes
+     - New API endpoints or routes
+     - New database queries or data transformations
+     - New validation or authorization logic
+  
+  2. **Modified Business Logic**
+     - Changes to algorithms or calculations
+     - Modified conditional logic (if/else, switch)
+     - Updated data processing
+     - Changed error handling behavior
+  
+  3. **Bug Fixes**
+     - MUST include a regression test proving the bug is fixed
+     - Test should fail on the old code, pass on the new code
+  
+  4. **New Features**
+     - User-facing features
+     - Internal utilities that others will depend on
+     - Complex workflows or state machines
+  
+  5. **Integration Points**
+     - New third-party API calls
+     - New database interactions
+     - New message queue consumers/producers
+  
+  ### ⚠️ Tests May Not Be Required For:
+  
+  1. **Pure Configuration**
+     - Changing config values
+     - Updating environment variables
+     - Adjusting build settings
+  
+  2. **Documentation Only**
+     - README updates
+     - Comment changes
+     - JSDoc/docstring updates
+  
+  3. **Dependency Updates**
+     - Package version bumps
+     - Lock file changes
+  
+  4. **Non-Logic Changes**
+     - Code formatting
+     - Renaming variables without logic changes
+     - Moving code without modification
+     - Import reorganization
+  
+  5. **Already Covered**
+     - Changes to code that is thoroughly tested by existing tests
+     - Minor refactoring within well-tested code
+  
+  ## RESPONSE FORMAT
+  
+  ### If Tests Are Missing:
