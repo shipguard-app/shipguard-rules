@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![GitHub Stars](https://img.shields.io/github/stars/shipguard/community-rules?style=social)](https://github.com/shipguard/community-rules)
+[![GitHub Stars](https://img.shields.io/github/stars/shipguard/community-rules?style=social)](https://github.com/shipguard-app/shipguard-rules)
 
 > A comprehensive, community-curated collection of battle-tested Ship Guard rules for automated code review.
 
