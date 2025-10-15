@@ -1,0 +1,17 @@
+# Prevent console.log and console.warn in production code
+# This rule helps keep your codebase clean by flagging debug statements
+# that should not be committed to production branches.
+
+name: "Block console.log in JavaScript files"
+condition: "banned-terms"
+severity: "warning"
+terms: ["console.log", "console.warn"]
+message: "Found a 'console.log' or 'console.warn'. Please remove it before merging."
+paths:
+  - "src/**/*.js"
+  - "src/**/*.ts"
+  - "src/**/*.jsx"
+  - "src/**/*.tsx"
+excludePaths:
+  - "**/*.spec.ts"
+  - "**/*.test.ts"
